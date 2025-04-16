@@ -1,6 +1,6 @@
 {
   "name": "vue-pannellum-es",
-  "version": "0.6.0",
+  "version": "0.6.2",
   "description": "Vue component for Pannellum panorama viewer",
   "type": "module",
   "main": "dist/vue-pannellum-es.umd.js",
