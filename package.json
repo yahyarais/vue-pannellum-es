@@ -3,12 +3,12 @@
   "version": "0.6.0",
   "description": "Vue component for Pannellum panorama viewer",
   "type": "module",
-  "main": "dist/vue-pannellum.umd.js",
-  "module": "dist/vue-pannellum.es.js",
+  "main": "dist/vue-pannellum-es.umd.js",
+  "module": "dist/vue-pannellum-es.es.js",
   "exports": {
     ".": {
-      "import": "./dist/vue-pannellum.es.js",
-      "require": "./dist/vue-pannellum.umd.js"
+      "import": "./dist/vue-pannellum-es.es.js",
+      "require": "./dist/vue-pannellum-es.umd.js"
     },
     "./style.css": "./dist/style.css"
   },
