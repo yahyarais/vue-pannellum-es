@@ -1,6 +1,7 @@
 <!--Panorama viewer pannellum wrap.-->
 <template>
   <div
+    ref="panoramaContainer"
     class="vue-pannellum"
     @mouseup="onMouseUp"
     @touchmove="onTouchMove"
@@ -49,7 +50,7 @@ export default defineComponent({
     const viewer = ref(null)
     const info = ref('')
     const rafId = ref(-1)
-    const el = ref(null)
+    const panoramaContainer = ref(null)
 
     const srcOption = computed(() => {
       if (typeof props.src === 'string') {
@@ -86,7 +87,7 @@ export default defineComponent({
     })
 
     const load = () => {
-      if (!el.value) return
+      if (!panoramaContainer.value) return
 
       let options = {
         autoLoad: props.autoLoad,
@@ -106,7 +107,7 @@ export default defineComponent({
         ...srcOption.value,
       }
       
-      viewer.value = window.pannellum.viewer(el.value, options)
+      viewer.value = window.pannellum.viewer(panoramaContainer.value, options)
       viewer.value.on('load', () => {
         emit('load')
       })
@@ -114,17 +115,17 @@ export default defineComponent({
         emit('error', err)
       })
       
-      if (props.showInfo === false && el.value) {
-        let infoEl = el.value.querySelector('.pnlm-panorama-info')
+      if (props.showInfo === false && panoramaContainer.value) {
+        let infoEl = panoramaContainer.value.querySelector('.pnlm-panorama-info')
         // Note: Using display will not work when in tour mode and switch scene
         if (infoEl) infoEl.style.visibility = 'hidden'
       }
-      if (props.showZoom === false && el.value) {
-        let zoomEl = el.value.querySelector('.pnlm-zoom-controls')
+      if (props.showZoom === false && panoramaContainer.value) {
+        let zoomEl = panoramaContainer.value.querySelector('.pnlm-zoom-controls')
         if (zoomEl) zoomEl.style.display = 'none'
       }
-      if (props.showFullscreen === false && el.value) {
-        let fullscreenEl = el.value.querySelector('.pnlm-fullscreen-toggle-button')
+      if (props.showFullscreen === false && panoramaContainer.value) {
+        let fullscreenEl = panoramaContainer.value.querySelector('.pnlm-fullscreen-toggle-button')
         if (fullscreenEl) fullscreenEl.style.display = 'none'
       }
     }
@@ -164,8 +165,8 @@ export default defineComponent({
     }, 3000)
 
     watch(() => props.src, () => {
-      if (el.value) {
-        el.value.innerHTML = ''
+      if (panoramaContainer.value) {
+        panoramaContainer.value.innerHTML = ''
         nextTick(load)
       }
     })
@@ -209,7 +210,6 @@ export default defineComponent({
     })
 
     onMounted(() => {
-      el.value = document.querySelector('.vue-pannellum')
       load()
       rafId.value = window.requestAnimationFrame(loop)
     })
@@ -229,7 +229,8 @@ export default defineComponent({
       info,
       onMouseUp,
       onTouchMove,
-      onTouchEnd
+      onTouchEnd,
+      panoramaContainer
     }
   }
 })
