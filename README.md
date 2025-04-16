@@ -1,4 +1,4 @@
-# vue-pannellum
+# vue-pannellum-es
 
 Vue wrap of the brilliant panorama viewer [Pannellum](https://pannellum.org/)
 
@@ -9,23 +9,23 @@ Now updated to support Vue 3 and ES modules!
 Install
 
 ```
-npm install vue-pannellum
+npm install vue-pannellum-es
 ```
 
 ### Vue 3 (Recommended)
 
 ```js
 import { createApp } from 'vue'
-import VuePannellum from 'vue-pannellum'
-import 'vue-pannellum/style.css' // Import styles
+import VuePannellum from 'vue-pannellum-es'
+import 'vue-pannellum-es/style.css' // Import styles
 
 const app = createApp(App)
 app.component('VPannellum', VuePannellum)
 app.mount('#app')
 
 // Or in a component
-import VuePannellum from 'vue-pannellum'
-import 'vue-pannellum/style.css'
+import VuePannellum from 'vue-pannellum-es'
+import 'vue-pannellum-es/style.css'
 
 export default {
   components: {
@@ -40,7 +40,7 @@ For Vue 2 support, use version 0.5.x:
 
 ```js
 import Vue from 'vue'
-import VuePannellum from 'vue-pannellum'
+import VuePannellum from 'vue-pannellum-es'
 
 Vue.component('VPannellum', VuePannellum)
 ```

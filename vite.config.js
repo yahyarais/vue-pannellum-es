@@ -7,9 +7,9 @@ export default defineConfig({
   root: 'demo',
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/vue-pannellum.vue'),
+      entry: resolve(__dirname, 'src/vue-pannellum-es.vue'),
       name: 'VuePannellum',
-      fileName: (format) => `vue-pannellum.${format}.js`,
+      fileName: (format) => `vue-pannellum-es.${format}.js`,
     },
     rollupOptions: {
       external: ['vue', 'pannellum'],
