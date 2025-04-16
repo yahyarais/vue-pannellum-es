@@ -14,12 +14,14 @@
 </template>
 
 <script>
+import { defineComponent, ref, computed, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
 import 'pannellum'
 import 'pannellum/build/pannellum.css'
 
-import _debounce from 'lodash.debounce'
+import { debounce as _debounce } from 'lodash-es'
 
-export default {
+export default defineComponent({
+  name: 'VuePannellum',
   props: {
     debug: { type: Boolean, default: false },
     src: { type: [String, Object], required: true },
@@ -42,169 +44,195 @@ export default {
     pitch: { type: Number, default: 0 },
     crossOrigin: {type: String, default: 'anonymous' },
   },
-  data () {
-    return {
-      viewer: null,
-      info: '',
-      rafId: -1,
-    }
-  },
-  computed: {
-    srcOption () {
-      if (typeof this.src === 'string') {
+  emits: ['load', 'error', 'update:hfov', 'update:yaw', 'update:pitch'],
+  setup(props, { emit, expose }) {
+    const viewer = ref(null)
+    const info = ref('')
+    const rafId = ref(-1)
+    const el = ref(null)
+
+    const srcOption = computed(() => {
+      if (typeof props.src === 'string') {
         return {
           type: 'equirectangular',
-          panorama: this.src,
-          hotSpots: this.hotSpots,
+          panorama: props.src,
+          hotSpots: props.hotSpots,
         }
-      } else if (typeof this.src === 'object') {
-        if (this.src.px && this.src.ny) {
+      } else if (typeof props.src === 'object') {
+        if (props.src.px && props.src.ny) {
           return {
             type: 'cubemap',
             cubeMap: [
-              this.src.pz,
-              this.src.px,
-              this.src.nz,
-              this.src.nx,
-              this.src.py,
-              this.src.ny,
+              props.src.pz,
+              props.src.px,
+              props.src.nz,
+              props.src.nx,
+              props.src.py,
+              props.src.ny,
             ],
-            hotSpots: this.hotSpots,
+            hotSpots: props.hotSpots,
           }
-        } else if (this.src.scenes) {
+        } else if (props.src.scenes) {
           return {
-            default: this.src.default,
-            scenes: this.src.scenes,
+            default: props.src.default,
+            scenes: props.src.scenes,
           }
         } else {
           console.error('[vue-pannellum] Unknown src type')
         }
       } else {
-        console.error('[vue-pannellum] Unknown src type: ' + typeof this.src)
+        console.error('[vue-pannellum] Unknown src type: ' + typeof props.src)
       }
-    },
-  },
-  watch: {
-    src (val) {
-      this.$el.innerHTML = ''
-      this.$nextTick(this.load)
-    },
-    hfov (val) {
-      if (this.viewer) this.viewer.setHfov(val, false)
-    },
-    yaw (val) {
-      if (this.viewer) this.viewer.setYaw(val, false)
-    },
-    pitch (val) {
-      if (this.viewer) this.viewer.setPitch(val, false)
-    },
-    maxHfov (val) {
-      if (this.viewer) {
-        this.viewer.setHfovBounds([this.minHfov, this.maxHfov])
-      }
-    },
-    minHfov (val) {
-      if (this.viewer) {
-        this.viewer.setHfovBounds([this.minHfov, this.maxHfov])
-      }
-    },
-    autoRotate (val) {
-      if (val) {
-        this.viewer.startAutoRotate()
-      } else {
-        this.viewer.stopAutoRotate()
-        if (this.orientation) this.viewer.startOrientation()
-      }
-    },
-    orientation (val) {
-      if (val) {
-        this.viewer.startOrientation()
-      } else {
-        this.viewer.stopOrientation()
-        if (this.autoRotate) this.viewer.startAutoRotate()
-      }
-    },
-  },
-  mounted () {
-    this.load()
-    this.rafId = window.requestAnimationFrame(this.loop)
-  },
-  beforeDestroy() {
-    this.viewer.destroy()
-    window.cancelAnimationFrame(this.rafId)
-  },
-  methods: {
-    load () {
+    })
+
+    const load = () => {
+      if (!el.value) return
+
       let options = {
-        autoLoad: this.autoLoad,
-        autoRotate: this.autoRotate === true ? -2 : 0,
-        orientationOnByDefault: this.orientation,
-        draggable: this.draggable,
-        mouseZoom: this.mouseZoom,
-        doubleClickZoom: this.doubleClickZoom,
-        compass: this.compass,
-        preview: this.preview,
-        hfov: this.hfov,
-        yaw: this.yaw,
-        pitch: this.pitch,
-        minHfov: this.minHfov,
-        maxHfov: this.maxHfov,
-        crossOrigin: this.crossOrigin,
-        // haov: 149.87,
-        // vaov: 54.15,
-        ...this.srcOption,
+        autoLoad: props.autoLoad,
+        autoRotate: props.autoRotate === true ? -2 : 0,
+        orientationOnByDefault: props.orientation,
+        draggable: props.draggable,
+        mouseZoom: props.mouseZoom,
+        doubleClickZoom: props.doubleClickZoom,
+        compass: props.compass,
+        preview: props.preview,
+        hfov: props.hfov,
+        yaw: props.yaw,
+        pitch: props.pitch,
+        minHfov: props.minHfov,
+        maxHfov: props.maxHfov,
+        crossOrigin: props.crossOrigin,
+        ...srcOption.value,
       }
-      // console.log('options', options)
-      this.viewer = window.pannellum.viewer(this.$el, options)
-      this.viewer.on('load', () => {
-        this.$emit('load')
+      
+      viewer.value = window.pannellum.viewer(el.value, options)
+      viewer.value.on('load', () => {
+        emit('load')
       })
-      this.viewer.on('error', (err) => {
-        this.$emit('error', err)
+      viewer.value.on('error', (err) => {
+        emit('error', err)
       })
-      if (this.showInfo === false) {
-        let el = this.$el.querySelector('.pnlm-panorama-info')
+      
+      if (props.showInfo === false && el.value) {
+        let infoEl = el.value.querySelector('.pnlm-panorama-info')
         // Note: Using display will not work when in tour mode and switch scene
-        if (el) el.style.visibility = 'hidden'
+        if (infoEl) infoEl.style.visibility = 'hidden'
       }
-      if (this.showZoom === false) {
-        let el = this.$el.querySelector('.pnlm-zoom-controls')
-        if (el) el.style.display = 'none'
+      if (props.showZoom === false && el.value) {
+        let zoomEl = el.value.querySelector('.pnlm-zoom-controls')
+        if (zoomEl) zoomEl.style.display = 'none'
       }
-      if (this.showFullscreen === false) {
-        let el = this.$el.querySelector('.pnlm-fullscreen-toggle-button')
-        if (el) el.style.display = 'none'
+      if (props.showFullscreen === false && el.value) {
+        let fullscreenEl = el.value.querySelector('.pnlm-fullscreen-toggle-button')
+        if (fullscreenEl) fullscreenEl.style.display = 'none'
       }
-    },
-    loop () {
-      this.rafId = window.requestAnimationFrame(this.loop)
-      let hfov = this.viewer.getHfov()
-      let yaw = this.viewer.getYaw()
-      let pitch = this.viewer.getPitch()
+    }
+
+    const loop = () => {
+      rafId.value = window.requestAnimationFrame(loop)
+      if (!viewer.value) return
+      let hfov = viewer.value.getHfov()
+      let yaw = viewer.value.getYaw()
+      let pitch = viewer.value.getPitch()
       if (pitch > 90) pitch = 90
       else if (pitch < -90) pitch = -90
-      if (hfov != this.hfov) this.$emit('update:hfov', hfov)
-      if (yaw != this.yaw) this.$emit('update:yaw', yaw)
-      if (pitch != this.pitch) this.$emit('update:pitch', pitch)
-    },
-    onMouseUp () {
-      if (this.debug) this.info += ' mu'
-      this.debounceRotate()
-    },
-    onTouchMove () {
-      if (this.debug) this.info += ' tm'
-    },
-    onTouchEnd () {
-      if (this.debug) this.info += ' te'
-      this.debounceRotate()
-    },
-    debounceRotate: _debounce(function () {
+      if (hfov != props.hfov) emit('update:hfov', hfov)
+      if (yaw != props.yaw) emit('update:yaw', yaw)
+      if (pitch != props.pitch) emit('update:pitch', pitch)
+    }
+
+    const onMouseUp = () => {
+      if (props.debug) info.value += ' mu'
+      debounceRotate()
+    }
+
+    const onTouchMove = () => {
+      if (props.debug) info.value += ' tm'
+    }
+
+    const onTouchEnd = () => {
+      if (props.debug) info.value += ' te'
+      debounceRotate()
+    }
+
+    const debounceRotate = _debounce(function () {
+      if (!viewer.value) return
       // priority of orientation is higher
-      if (this.orientation) this.viewer.startOrientation()
-      else if (this.autoRotate) this.viewer.startAutoRotate()
-    }, 3000),
-  },
-}
+      if (props.orientation) viewer.value.startOrientation()
+      else if (props.autoRotate) viewer.value.startAutoRotate()
+    }, 3000)
+
+    watch(() => props.src, () => {
+      if (el.value) {
+        el.value.innerHTML = ''
+        nextTick(load)
+      }
+    })
+
+    watch(() => props.hfov, (val) => {
+      if (viewer.value) viewer.value.setHfov(val, false)
+    })
+
+    watch(() => props.yaw, (val) => {
+      if (viewer.value) viewer.value.setYaw(val, false)
+    })
+
+    watch(() => props.pitch, (val) => {
+      if (viewer.value) viewer.value.setPitch(val, false)
+    })
+
+    watch([() => props.minHfov, () => props.maxHfov], () => {
+      if (viewer.value) {
+        viewer.value.setHfovBounds([props.minHfov, props.maxHfov])
+      }
+    })
+
+    watch(() => props.autoRotate, (val) => {
+      if (!viewer.value) return
+      if (val) {
+        viewer.value.startAutoRotate()
+      } else {
+        viewer.value.stopAutoRotate()
+        if (props.orientation) viewer.value.startOrientation()
+      }
+    })
+
+    watch(() => props.orientation, (val) => {
+      if (!viewer.value) return
+      if (val) {
+        viewer.value.startOrientation()
+      } else {
+        viewer.value.stopOrientation()
+        if (props.autoRotate) viewer.value.startAutoRotate()
+      }
+    })
+
+    onMounted(() => {
+      el.value = document.querySelector('.vue-pannellum')
+      load()
+      rafId.value = window.requestAnimationFrame(loop)
+    })
+
+    onBeforeUnmount(() => {
+      if (viewer.value) viewer.value.destroy()
+      window.cancelAnimationFrame(rafId.value)
+    })
+
+    // Expose methods for parent components
+    expose({
+      load,
+      getViewer: () => viewer.value
+    })
+
+    return {
+      info,
+      onMouseUp,
+      onTouchMove,
+      onTouchEnd
+    }
+  }
+})
 </script>
 
 <style>

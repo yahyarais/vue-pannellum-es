@@ -1,26 +1,13 @@
-
 ## Changelog
 
-### v0.5.0 - 2019/07/19
+### v0.6.0 - 2025/04/16
 
-- Update dependency `pannellum` to `v2.5.2`
+- Migrated to Vue 3 compatibility
+- Added ES modules support
+- Replaced Parcel bundler with Vite for modern build system
+- Updated component API to use Vue 3 composition API and v-model syntax
+- Improved TypeScript inference with better component typing
+- Fixed security issues with dependency updates
 
-### v0.4.8 - 2019/05/29
-
-- Limit pitch within -90 and 90.
-
-### v0.4.7 - 2019/05/27
-
-- Support `hotSpots`.
-
-### v0.4.6 - 2019/05/14
-
-- Fix an error on some mobile browser.
-
-### v0.4.5 - 2019/05/08
-
-- Fix image quality may be bad on some mobile browser.
-
-### v0.4.4 - 2019/05/07
-
-- Properties `hfov`, `yaw`, `pitch` can be two-way bound with `.sync` modifier now.
+### Previous version
+The previous version was done by Jarvis Niu <jarvisniu@gmail.com>

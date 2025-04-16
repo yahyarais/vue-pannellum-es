@@ -2,6 +2,8 @@
 
 Vue wrap of the brilliant panorama viewer [Pannellum](https://pannellum.org/)
 
+Now updated to support Vue 3 and ES modules!
+
 ## Usage
 
 Install
@@ -10,7 +12,31 @@ Install
 npm install vue-pannellum
 ```
 
-Register
+### Vue 3 (Recommended)
+
+```js
+import { createApp } from 'vue'
+import VuePannellum from 'vue-pannellum'
+import 'vue-pannellum/style.css' // Import styles
+
+const app = createApp(App)
+app.component('VPannellum', VuePannellum)
+app.mount('#app')
+
+// Or in a component
+import VuePannellum from 'vue-pannellum'
+import 'vue-pannellum/style.css'
+
+export default {
+  components: {
+    VPannellum
+  }
+}
+```
+
+### Vue 2 (Legacy)
+
+For Vue 2 support, use version 0.5.x:
 
 ```js
 import Vue from 'vue'
@@ -19,10 +45,26 @@ import VuePannellum from 'vue-pannellum'
 Vue.component('VPannellum', VuePannellum)
 ```
 
-Use
+### Usage in templates
 
 ```html
-<v-pannellum :src="equirectangularUrl" style="height: 500px;"></v-pannellum>
+<!-- Vue 3 - use v-model for two-way binding -->
+<v-pannellum 
+  :src="equirectangularUrl" 
+  style="height: 500px;"
+  v-model:hfov="hfov"
+  v-model:yaw="yaw"
+  v-model:pitch="pitch"
+></v-pannellum>
+
+<!-- Vue 2 - use .sync for two-way binding (legacy) -->
+<v-pannellum 
+  :src="equirectangularUrl" 
+  style="height: 500px;"
+  :hfov.sync="hfov"
+  :yaw.sync="yaw"
+  :pitch.sync="pitch"
+></v-pannellum>
 ```
 
 ## Src types
@@ -100,9 +142,12 @@ src = {
 
 - `load`: When finish loading.
 - `error`: When an error occurs, error message as parameter.
+- `update:hfov`, `update:yaw`, `update:pitch`: Events emitted for v-model support.
 
 ## Features
 
+- Vue 3 compatible
+- ES modules support
 - type
 - autoLoad
 - autoRotate
@@ -114,6 +159,16 @@ src = {
 - watch url changing
 - max/minHfov
 - orientation
+
+## Development
+
+```bash
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+```
 
 ## Licence
 
